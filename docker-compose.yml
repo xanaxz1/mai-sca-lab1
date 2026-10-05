@@ -1,0 +1,35 @@
+version: '3.8'
+services:
+  dtrack-postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=dtrack
+      - POSTGRES_PASSWORD=dtrack
+      - POSTGRES_DB=dtrack
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+  dtrack-api:
+    image: dependencytrack/apiserver:latest
+    ports:
+      - "8081:8080"
+    environment:
+      - ALPINE_DATABASE_MODE=external
+      - ALPINE_DATABASE_URL=jdbc:postgresql://dtrack-postgres:5432/dtrack
+      - ALPINE_DATABASE_DRIVER=org.postgresql.Driver
+      - ALPINE_DATABASE_USERNAME=dtrack
+      - ALPINE_DATABASE_PASSWORD=dtrack
+    volumes:
+      - dtrack-data:/data
+    depends_on:
+      - dtrack-postgres
+  dtrack-frontend:
+    image: dependencytrack/frontend:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - API_BASE_URL=http://localhost:8081
+    depends_on:
+      - dtrack-api
+volumes:
+  postgres-data:
+  dtrack-data:
